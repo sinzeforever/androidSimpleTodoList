@@ -9,6 +9,12 @@ Completed user stories:
  * [x] Required: User can view a list todo items
  * [x] Required: User can add a item into the list
  * [x] Required: User can remove a item from the list
+ * [x] Required: User can edit a item from the list
  * [x] Required: The list data will be saved on device
- 
-![Video Walkthrough](simpleTodoList.gif) 
+  
+Extention:
+ * use SQLite
+ * use DialogFragment for editing mode
+ * add aditional style
+
+![Video Walkthrough](simple-todo.gif) 
