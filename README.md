@@ -11,4 +11,4 @@ Completed user stories:
  * [x] Required: User can remove a item from the list
  * [x] Required: The list data will be saved on device
  
-![Video Walkthrough](simpleTodoList.gif)
+![Video Walkthrough](simpleTodoList.gif) 
