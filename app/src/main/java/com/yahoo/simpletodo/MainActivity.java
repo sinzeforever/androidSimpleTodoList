@@ -1,6 +1,5 @@
 package com.yahoo.simpletodo;
 
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -11,115 +10,65 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.greendao.DaoMaster;
-import com.greendao.DaoMaster.DevOpenHelper;
-import com.greendao.DaoSession;
-import com.greendao.Memo;
-import com.greendao.MemoDao;
-
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 
 public class MainActivity extends ActionBarActivity {
-    ArrayList<String> items;
+
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
-    private SQLiteDatabase db;
-    private DaoMaster daoMaster;
-    private DaoSession daoSession;
-    private MemoDao memoDao;
+    EditFragment editFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setUpDao();
+
+        // set up data manager
+        new DataManager(this);
         lvItems = (ListView) findViewById(R.id.lvItems);
-        daoReadItems();
+
         // readItems();
-        itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
+        itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, DataManager.dataManager.items);
         lvItems.setAdapter(itemsAdapter);
         setupListViewListener();
     }
-    private void setUpDao() {
-        DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "Memo", null);
-        db = helper.getWritableDatabase();
-        daoMaster = new DaoMaster(db);
-        daoSession = daoMaster.newSession();
-        memoDao = daoSession.getMemoDao();
-    }
-
-    private void daoWriteItems() {
-        memoDao.deleteAll();
-        for(String item: items) {
-            addMemo(item, item);
-        }
-    }
-
-    private void daoReadItems() {
-        List<Memo> memos = memoDao.queryBuilder().list();
-        items = new ArrayList<String>();
-        for(Memo memo: memos) {
-            items.add(memo.getData());
-        }
-    }
-
-    public void addMemo(String text, String date) {
-        Memo memo = new Memo(text, date);
-        memoDao.insert(memo);
-    }
 
     public void onAddItem(View v) {
+        Util.hideKeyBoard(this);
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
         // itemsAdapter.add(itemText);
-        items.add(itemText);
+        DataManager.dataManager.items.add(itemText);
         itemsAdapter.notifyDataSetChanged();
         etNewItem.setText("");
         // writeItems();
-        daoWriteItems();
+        DataManager.dataManager.daoWriteItems();
     }
 
-    private void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        } catch (IOException e) {
-            items = new ArrayList<String>();
-        }
+    private void showEditDialog(int pos) {
+        editFragment = EditFragment.newInstance(pos, DataManager.dataManager.items.get(pos));
+        editFragment.show(getFragmentManager(), "dialog");
     }
-
-    private void writeItems() {
-
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
 
     private void setupListViewListener() {
         lvItems.setOnItemLongClickListener(
             new AdapterView.OnItemLongClickListener() {
                 @Override
                 public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
-                    items.remove(pos);
+                    DataManager.dataManager.items.remove(pos);
                     itemsAdapter.notifyDataSetChanged();
                     // writeItems();
-                    daoWriteItems();
+                    DataManager.dataManager.daoWriteItems();
                     return true;
                 }
             }
+        );
+        lvItems.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
+                        showEditDialog(pos);
+                    }
+                }
         );
     }
 
