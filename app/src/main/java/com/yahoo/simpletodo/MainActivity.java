@@ -1,5 +1,6 @@
 package com.yahoo.simpletodo;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -10,27 +11,67 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.greendao.DaoMaster;
+import com.greendao.DaoMaster.DevOpenHelper;
+import com.greendao.DaoSession;
+import com.greendao.Memo;
+import com.greendao.MemoDao;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity {
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
+    private SQLiteDatabase db;
+    private DaoMaster daoMaster;
+    private DaoSession daoSession;
+    private MemoDao memoDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setUpDao();
         lvItems = (ListView) findViewById(R.id.lvItems);
-        readItems();
+        daoReadItems();
+        // readItems();
         itemsAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemsAdapter);
         setupListViewListener();
+    }
+    private void setUpDao() {
+        DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "Memo", null);
+        db = helper.getWritableDatabase();
+        daoMaster = new DaoMaster(db);
+        daoSession = daoMaster.newSession();
+        memoDao = daoSession.getMemoDao();
+    }
+
+    private void daoWriteItems() {
+        memoDao.deleteAll();
+        for(String item: items) {
+            addMemo(item, item);
+        }
+    }
+
+    private void daoReadItems() {
+        List<Memo> memos = memoDao.queryBuilder().list();
+        items = new ArrayList<String>();
+        for(Memo memo: memos) {
+            items.add(memo.getData());
+        }
+    }
+
+    public void addMemo(String text, String date) {
+        Memo memo = new Memo(text, date);
+        memoDao.insert(memo);
     }
 
     public void onAddItem(View v) {
@@ -40,7 +81,8 @@ public class MainActivity extends ActionBarActivity {
         items.add(itemText);
         itemsAdapter.notifyDataSetChanged();
         etNewItem.setText("");
-        writeItems();
+        // writeItems();
+        daoWriteItems();
     }
 
     private void readItems() {
@@ -54,6 +96,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void writeItems() {
+
         File filesDir = getFilesDir();
         File todoFile = new File(filesDir, "todo.txt");
         try {
@@ -61,6 +104,7 @@ public class MainActivity extends ActionBarActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
 
@@ -71,7 +115,8 @@ public class MainActivity extends ActionBarActivity {
                 public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id) {
                     items.remove(pos);
                     itemsAdapter.notifyDataSetChanged();
-                    writeItems();
+                    // writeItems();
+                    daoWriteItems();
                     return true;
                 }
             }
