@@ -13,8 +13,10 @@ import android.widget.TextView;
  */
 public class EditFragment extends DialogFragment {
     TextView editText;
-    static EditFragment newInstance(int id, String text) {
+    MainActivity main;
+    static EditFragment newInstance(int id, String text, MainActivity main) {
         EditFragment fragment = new EditFragment();
+        fragment.main = main;
         Bundle args = new Bundle();
         args.putInt("id", id);
         args.putString("text", text);
@@ -55,6 +57,7 @@ public class EditFragment extends DialogFragment {
         int index = getArguments().getInt("id");
         DataManager.dataManager.items.set(index, editText.getText().toString());
         DataManager.dataManager.daoWriteItems();
+        Util.hideKeyBoard(this.main);
         this.dismiss();
     }
 

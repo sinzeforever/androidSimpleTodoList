@@ -45,7 +45,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private void showEditDialog(int pos) {
-        editFragment = EditFragment.newInstance(pos, DataManager.dataManager.items.get(pos));
+        editFragment = EditFragment.newInstance(pos, DataManager.dataManager.items.get(pos), this);
         editFragment.show(getFragmentManager(), "dialog");
     }
 
